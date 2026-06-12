@@ -9,6 +9,7 @@ const state = {
   monthFilter: "",
   selectedDay: "",
   selectedTag: "",
+  managingTag: "",
   sheetOpen: false,
 };
 
@@ -40,11 +41,14 @@ const els = {
   multiplier: $("multiplier"),
   directPay: $("directPay"),
   recordTag: $("recordTag"),
+  manageTag: $("manageTag"),
   tagNameInput: $("tagNameInput"),
   addTagButton: $("addTagButton"),
   renameTagButton: $("renameTagButton"),
   deleteTagButton: $("deleteTagButton"),
-  tagFilter: $("tagFilter"),
+  tagChips: $("tagChips"),
+  tagHint: $("tagHint"),
+  tagEmptyHint: $("tagEmptyHint"),
   note: $("note"),
   saveRecord: $("saveRecord"),
   formError: $("formError"),
@@ -96,8 +100,9 @@ function bindEvents() {
   els.addTagButton.addEventListener("click", addTag);
   els.renameTagButton.addEventListener("click", renameTag);
   els.deleteTagButton.addEventListener("click", deleteTag);
-  els.recordTag.addEventListener("change", () => {
-    els.tagNameInput.value = els.recordTag.value;
+  els.manageTag.addEventListener("change", () => {
+    state.managingTag = els.manageTag.value;
+    els.tagNameInput.value = state.managingTag;
     updateTagButtons();
   });
   els.clearDayFilter.addEventListener("click", () => {
@@ -110,12 +115,6 @@ function bindEvents() {
     state.selectedDay = "";
     saveState();
     render();
-  });
-  els.tagFilter.addEventListener("change", () => {
-    state.selectedTag = els.tagFilter.value;
-    saveState();
-    renderMonthSection();
-    renderRecords();
   });
 
   window.addEventListener("keydown", (event) => {
@@ -167,7 +166,7 @@ function openSheet() {
   els.sheetOverlay.hidden = false;
   document.body.classList.add("sheet-is-open");
   renderEditMode();
-  renderTagSelects();
+  renderRecordTagSelect();
   requestAnimationFrame(() => els.recordSheet.classList.add("is-open"));
 }
 
@@ -196,11 +195,10 @@ function saveRecord() {
   if (!date) return showError("請選擇日期");
 
   const payMode = state.inputMode === "direct" ? "direct" : "time";
-  const tag = els.recordTag.value.trim();
   const basePayload = {
     id: state.editingId ?? Date.now(),
     date,
-    tag,
+    tag: cleanTagName(els.recordTag.value),
     note: els.note.value.trim(),
     payMode,
   };
@@ -284,10 +282,10 @@ function editRecord(id) {
   els.hourlyRate.value = record.hourlyRate || state.hourlyRate || "";
   els.multiplier.value = record.multiplier || 1;
   els.directPay.value = record.directPay || "";
-  els.recordTag.value = record.tag || "";
-  els.tagNameInput.value = record.tag || "";
   els.note.value = record.note || "";
   els.minutesInput.value = "";
+  renderRecordTagSelect();
+  els.recordTag.value = record.tag || "";
 
   if (state.inputMode === "minutes") {
     els.minutesInput.value = record.minutes;
@@ -322,39 +320,44 @@ function addTag() {
   if (state.tags.includes(tag)) return showError("這個標籤已經存在");
   state.tags.push(tag);
   state.tags.sort((a, b) => a.localeCompare(b, "zh-Hant"));
-  els.recordTag.value = tag;
+  state.managingTag = tag;
   saveState();
-  renderTagSelects();
-  els.recordTag.value = tag;
+  render();
+  els.manageTag.value = tag;
+  els.tagNameInput.value = tag;
+  updateTagButtons();
   showError("");
 }
 
 function renameTag() {
-  const oldTag = els.recordTag.value;
+  const oldTag = state.managingTag || els.manageTag.value;
   const newTag = cleanTagName(els.tagNameInput.value);
   if (!oldTag) return showError("請先選擇要改名的標籤");
   if (!newTag) return showError("請輸入新的標籤名稱");
   if (oldTag !== newTag && state.tags.includes(newTag)) return showError("這個標籤已經存在");
+  if (oldTag === newTag) return showError("");
 
   state.tags = state.tags.map((tag) => tag === oldTag ? newTag : tag).sort((a, b) => a.localeCompare(b, "zh-Hant"));
   state.records = state.records.map((record) => record.tag === oldTag ? { ...record, tag: newTag } : record);
   if (state.selectedTag === oldTag) state.selectedTag = newTag;
+  state.managingTag = newTag;
   saveState();
   render();
-  els.recordTag.value = newTag;
+  els.manageTag.value = newTag;
   els.tagNameInput.value = newTag;
+  updateTagButtons();
   showError("");
 }
 
 function deleteTag() {
-  const tag = els.recordTag.value;
+  const tag = state.managingTag || els.manageTag.value;
   if (!tag) return showError("請先選擇要刪除的標籤");
   if (!confirm(`確定要刪除「${tag}」標籤嗎？使用這個標籤的舊紀錄會改成無標籤。`)) return;
 
   state.tags = state.tags.filter((item) => item !== tag);
   state.records = state.records.map((record) => record.tag === tag ? { ...record, tag: "" } : record);
   if (state.selectedTag === tag) state.selectedTag = "";
-  els.recordTag.value = "";
+  state.managingTag = "";
   els.tagNameInput.value = "";
   saveState();
   render();
@@ -366,7 +369,6 @@ function clearForm() {
   els.multiplier.value = "1";
   els.directPay.value = "";
   els.recordTag.value = "";
-  els.tagNameInput.value = "";
   els.note.value = "";
   els.workDate.value = todayString();
   els.startTime.value = "09:00";
@@ -380,7 +382,7 @@ function clearForm() {
 function render() {
   els.hourlyRate.value = state.hourlyRate || els.hourlyRate.value;
   els.monthFilter.value = state.monthFilter;
-  renderTagSelects();
+  renderTagControls();
   renderInputMode();
   renderEditMode();
   renderSummaries();
@@ -388,15 +390,52 @@ function render() {
   renderRecords();
 }
 
-function renderTagSelects() {
-  fillTagSelect(els.recordTag, "無標籤");
-  fillTagSelect(els.tagFilter, "全部標籤");
-  els.tagFilter.value = state.selectedTag;
+function renderTagControls() {
+  if (state.selectedTag && !state.tags.includes(state.selectedTag)) state.selectedTag = "";
+  if (state.managingTag && !state.tags.includes(state.managingTag)) state.managingTag = "";
+  renderRecordTagSelect();
+  renderManageTagSelect();
+  renderTagChips();
   updateTagButtons();
+  els.tagHint.textContent = `${state.tags.length} 個標籤`;
+  els.tagEmptyHint.textContent = state.tags.length ? "" : "還沒有標籤。可以先新增店名或工作地點，例如麥當勞、肯德基。";
+}
+
+function renderRecordTagSelect() {
+  fillTagSelect(els.recordTag, "無標籤");
+}
+
+function renderManageTagSelect() {
+  fillTagSelect(els.manageTag, "選擇標籤");
+  els.manageTag.value = state.managingTag;
+}
+
+function renderTagChips() {
+  els.tagChips.innerHTML = "";
+  const all = createTagChip("", "全部標籤");
+  els.tagChips.appendChild(all);
+  state.tags.forEach((tag) => {
+    els.tagChips.appendChild(createTagChip(tag, tag));
+  });
+}
+
+function createTagChip(value, label) {
+  const chip = document.createElement("button");
+  chip.type = "button";
+  chip.className = `tag-chip${state.selectedTag === value ? " is-selected" : ""}`;
+  chip.textContent = label;
+  chip.addEventListener("click", () => {
+    state.selectedTag = value;
+    saveState();
+    renderMonthSection();
+    renderRecords();
+    renderTagChips();
+  });
+  return chip;
 }
 
 function updateTagButtons() {
-  const hasTag = Boolean(els.recordTag.value);
+  const hasTag = Boolean(state.managingTag || els.manageTag.value);
   els.renameTagButton.disabled = !hasTag;
   els.deleteTagButton.disabled = !hasTag;
 }
@@ -518,15 +557,18 @@ function summarize(records) {
 
 function renderRecords() {
   const records = state.selectedDay ? recordsForSelectedDay() : recordsForSelectedMonth();
+  const tagText = state.selectedTag ? ` · ${state.selectedTag}` : "";
   els.filterHint.textContent = state.selectedDay
-    ? `${formatDateLabel(state.selectedDay)} 共 ${records.length} 筆`
-    : `${state.monthFilter} 共 ${records.length} 筆`;
+    ? `${formatDateLabel(state.selectedDay)}${tagText} 共 ${records.length} 筆`
+    : `${state.monthFilter}${tagText} 共 ${records.length} 筆`;
   els.recordsList.innerHTML = "";
 
   if (!records.length) {
     const empty = document.createElement("p");
     empty.className = "empty-state";
-    empty.textContent = state.selectedDay ? "這一天沒有符合篩選的紀錄。" : "這個月份沒有符合篩選的紀錄。";
+    empty.textContent = state.selectedDay || state.selectedTag
+      ? "目前日期或標籤篩選下沒有紀錄。"
+      : "這個月份還沒有紀錄。";
     els.recordsList.appendChild(empty);
     return;
   }
@@ -605,12 +647,14 @@ function loadState() {
     state.tags = [...new Set(state.tags)].sort((a, b) => a.localeCompare(b, "zh-Hant"));
     state.monthFilter = saved.monthFilter || "";
     state.selectedTag = saved.selectedTag || "";
+    state.managingTag = state.tags.includes(saved.managingTag) ? saved.managingTag : "";
   } catch {
     state.hourlyRate = "";
     state.records = [];
     state.tags = [];
     state.monthFilter = "";
     state.selectedTag = "";
+    state.managingTag = "";
   }
 }
 
@@ -621,6 +665,7 @@ function saveState() {
     tags: state.tags,
     monthFilter: state.monthFilter,
     selectedTag: state.selectedTag,
+    managingTag: state.managingTag,
   }));
 }
 

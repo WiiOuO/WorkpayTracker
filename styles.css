@@ -164,6 +164,38 @@ h2 { font-size: 21px; }
   background-repeat: no-repeat;
 }
 
+.chip-row {
+  display: flex;
+  gap: 8px;
+  margin-top: 14px;
+  padding-bottom: 4px;
+  overflow-x: auto;
+  scrollbar-width: thin;
+}
+
+.tag-chip {
+  flex: 0 0 auto;
+  min-height: 38px;
+  border: 1px solid var(--line);
+  border-radius: 999px;
+  background: #fff;
+  color: var(--ink);
+  white-space: nowrap;
+}
+
+.tag-chip.is-selected {
+  border-color: var(--accent);
+  background: var(--accent);
+  color: #fff;
+}
+
+.tag-management-grid {
+  display: grid;
+  grid-template-columns: minmax(160px, .8fr) minmax(0, 1.2fr);
+  gap: 10px;
+  margin-top: 10px;
+}
+
 .chart-summary {
   display: flex;
   align-items: baseline;
@@ -547,6 +579,10 @@ h2 { font-size: 21px; }
   .month-input {
     width: 150px;
     min-width: 0;
+  }
+
+  .tag-management-grid {
+    grid-template-columns: 1fr;
   }
 
   .chart-summary strong {

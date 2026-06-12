@@ -44,13 +44,29 @@
       </article>
     </section>
 
+    <section class="panel tag-panel">
+      <div class="section-row">
+        <h2>標籤管理</h2>
+        <span id="tagHint" class="hint"></span>
+      </div>
+      <div id="tagChips" class="chip-row" aria-label="標籤篩選"></div>
+      <p id="tagEmptyHint" class="empty-state"></p>
+      <div class="tag-management-grid">
+        <select id="manageTag" class="select-input" aria-label="選擇要管理的標籤"></select>
+        <input id="tagNameInput" type="text" placeholder="新增或改名標籤，例如 麥當勞">
+      </div>
+      <div class="tag-actions">
+        <button id="addTagButton" type="button">新增標籤</button>
+        <button id="renameTagButton" class="ghost" type="button">改名</button>
+        <button id="deleteTagButton" class="danger" type="button">刪除</button>
+      </div>
+    </section>
+
     <section class="panel">
       <div class="section-row">
         <h2>月份統計</h2>
         <input id="monthFilter" class="month-input" type="month">
       </div>
-      <label for="tagFilter">標籤篩選</label>
-      <select id="tagFilter" class="select-input"></select>
       <div class="chart-summary">
         <strong id="filterMonthPay">$0.00</strong>
         <span id="filterMonthMinutes">0 分鐘</span>
@@ -80,6 +96,9 @@
 
     <label for="workDate">日期</label>
     <input id="workDate" type="date">
+
+    <label for="recordTag">標籤</label>
+    <select id="recordTag" class="select-input"></select>
 
     <div class="segmented mode-tabs" role="radiogroup" aria-label="紀錄輸入模式">
       <button id="minutesMode" class="active" type="button">輸入分鐘</button>
@@ -115,17 +134,6 @@
     <div id="directPayFields" hidden>
       <label for="directPay">直接薪水</label>
       <input id="directPay" inputmode="decimal" type="number" min="0" step="0.01" placeholder="例如 100">
-    </div>
-
-    <label for="recordTag">標籤</label>
-    <select id="recordTag" class="select-input"></select>
-    <div class="tag-tools">
-      <input id="tagNameInput" type="text" placeholder="新增或改名標籤，例如 麥當勞">
-      <div class="tag-actions">
-        <button id="addTagButton" type="button">新增</button>
-        <button id="renameTagButton" class="ghost" type="button">改名</button>
-        <button id="deleteTagButton" class="danger" type="button">刪除</button>
-      </div>
     </div>
 
     <label for="note">備註</label>
