@@ -250,6 +250,62 @@ button {
   margin-top: 16px;
 }
 
+.calendar-chart {
+  display: grid;
+  grid-template-columns: repeat(7, minmax(0, 1fr));
+  gap: 6px;
+  margin-top: 16px;
+}
+
+.calendar-weekday {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+  text-align: center;
+}
+
+.calendar-day {
+  display: grid;
+  align-content: start;
+  min-height: 72px;
+  border: 1px solid var(--line);
+  border-radius: 8px;
+  padding: 7px 6px;
+  background: #fff;
+  overflow: hidden;
+}
+
+.calendar-day.is-empty {
+  border-color: transparent;
+  background: transparent;
+}
+
+.calendar-day.has-pay {
+  border-color: rgba(47, 125, 109, .35);
+  background: #f3fbf4;
+}
+
+.calendar-day span {
+  color: var(--muted);
+  font-size: 12px;
+  font-weight: 800;
+}
+
+.calendar-day strong {
+  margin-top: 4px;
+  color: var(--ink);
+  font-size: clamp(11px, 2.8vw, 15px);
+  line-height: 1.1;
+  overflow-wrap: anywhere;
+}
+
+.calendar-day small {
+  margin-top: 2px;
+  color: var(--muted);
+  font-size: 11px;
+  line-height: 1.1;
+}
+
 .chart-row {
   display: grid;
   grid-template-columns: 42px 1fr 88px;
@@ -351,5 +407,15 @@ button {
   .chart-row strong {
     grid-column: 2;
     text-align: left;
+  }
+
+  .calendar-chart {
+    gap: 4px;
+  }
+
+  .calendar-day {
+    min-height: 64px;
+    border-radius: 6px;
+    padding: 6px 4px;
   }
 }

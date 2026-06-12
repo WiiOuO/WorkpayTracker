@@ -42,6 +42,7 @@ const els = {
   filterMonthPay: $("filterMonthPay"),
   filterMonthMinutes: $("filterMonthMinutes"),
   filterHint: $("filterHint"),
+  calendarChart: $("calendarChart"),
   chart: $("chart"),
 };
 
@@ -269,7 +270,52 @@ function renderMonthSection() {
   const summary = summarize(records);
   els.filterMonthPay.textContent = `$${money.format(summary.pay)}`;
   els.filterMonthMinutes.textContent = `${summary.minutes} 分鐘`;
+  renderCalendar(records);
   renderChart(records);
+}
+
+function renderCalendar(records) {
+  els.calendarChart.innerHTML = "";
+  const [year, month] = state.monthFilter.split("-").map(Number);
+  if (!year || !month) return;
+
+  const firstDay = new Date(year, month - 1, 1);
+  const daysInMonth = new Date(year, month, 0).getDate();
+  const startOffset = firstDay.getDay();
+  const byDay = new Map();
+
+  records.forEach((record) => {
+    const day = Number(record.date.slice(8, 10));
+    const current = byDay.get(day) || { pay: 0, minutes: 0 };
+    current.pay += calculatePay(record);
+    current.minutes += Number(record.minutes) || 0;
+    byDay.set(day, current);
+  });
+
+  ["日", "一", "二", "三", "四", "五", "六"].forEach((label) => {
+    const header = document.createElement("div");
+    header.className = "calendar-weekday";
+    header.textContent = label;
+    els.calendarChart.appendChild(header);
+  });
+
+  for (let i = 0; i < startOffset; i++) {
+    const blank = document.createElement("div");
+    blank.className = "calendar-day is-empty";
+    els.calendarChart.appendChild(blank);
+  }
+
+  for (let day = 1; day <= daysInMonth; day++) {
+    const data = byDay.get(day);
+    const cell = document.createElement("div");
+    cell.className = `calendar-day${data ? " has-pay" : ""}`;
+    cell.innerHTML = `
+      <span>${day}</span>
+      <strong>${data ? "$" + compactMoney(data.pay) : ""}</strong>
+      <small>${data ? data.minutes + "分" : ""}</small>
+    `;
+    els.calendarChart.appendChild(cell);
+  }
 }
 
 function renderChart(records) {
@@ -359,6 +405,12 @@ function saveState() {
 
 function calculatePay(record) {
   return Number(record.hourlyRate) * Number(record.minutes) / 60 * Number(record.multiplier);
+}
+
+function compactMoney(value) {
+  if (value >= 10000) return `${money.format(value / 10000)}萬`;
+  if (value >= 1000) return `${Math.round(value).toLocaleString("zh-TW")}`;
+  return money.format(value);
 }
 
 function positiveNumber(value) {

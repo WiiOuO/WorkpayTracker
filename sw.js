@@ -1,4 +1,4 @@
-const CACHE_NAME = "workpay-tracker-v4";
+const CACHE_NAME = "workpay-tracker-v5";
 const ASSETS = [
   "./",
   "./index.html",
