@@ -202,6 +202,75 @@ button {
   font-weight: 700;
 }
 
+.hint {
+  color: var(--muted);
+  font-size: 14px;
+  font-weight: 700;
+}
+
+.month-input {
+  width: auto;
+  min-width: 150px;
+}
+
+.chart-summary {
+  display: flex;
+  align-items: baseline;
+  gap: 10px;
+  margin-top: 14px;
+}
+
+.chart-summary strong {
+  font-size: 30px;
+}
+
+.chart-summary span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.chart {
+  display: grid;
+  gap: 10px;
+  margin-top: 16px;
+}
+
+.chart-row {
+  display: grid;
+  grid-template-columns: 42px 1fr 88px;
+  align-items: center;
+  gap: 10px;
+  min-height: 30px;
+  font-size: 14px;
+}
+
+.chart-row span {
+  color: var(--muted);
+  font-weight: 700;
+}
+
+.chart-row strong {
+  text-align: right;
+}
+
+.chart-track {
+  height: 12px;
+  overflow: hidden;
+  border-radius: 999px;
+  background: #eadfcd;
+}
+
+.chart-bar {
+  height: 100%;
+  border-radius: inherit;
+  background: linear-gradient(90deg, var(--accent), var(--accent-2));
+}
+
+.chart-empty {
+  margin: 0;
+  color: var(--muted);
+}
+
 .records-list {
   display: grid;
   gap: 10px;
@@ -249,5 +318,23 @@ button {
 
   .record-actions {
     grid-template-columns: 1fr 1fr;
+  }
+
+  .section-row {
+    align-items: stretch;
+    flex-direction: column;
+  }
+
+  .month-input {
+    width: 100%;
+  }
+
+  .chart-row {
+    grid-template-columns: 38px 1fr;
+  }
+
+  .chart-row strong {
+    grid-column: 2;
+    text-align: left;
   }
 }

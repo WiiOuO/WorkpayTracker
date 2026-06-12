@@ -5,6 +5,7 @@ const state = {
   records: [],
   inputMode: "minutes",
   editingId: null,
+  monthFilter: "",
 };
 
 const $ = (id) => document.getElementById(id);
@@ -33,10 +34,14 @@ const els = {
   formError: $("formError"),
   recordsList: $("recordsList"),
   recordTemplate: $("recordTemplate"),
-  exportCsv: $("exportCsv"),
   formTitle: $("formTitle"),
   cancelEdit: $("cancelEdit"),
   installButton: $("installButton"),
+  monthFilter: $("monthFilter"),
+  filterMonthPay: $("filterMonthPay"),
+  filterMonthMinutes: $("filterMonthMinutes"),
+  filterHint: $("filterHint"),
+  chart: $("chart"),
 };
 
 init();
@@ -53,6 +58,8 @@ function setDefaults() {
   if (!els.workDate.value) els.workDate.value = todayString();
   if (!els.startTime.value) els.startTime.value = "09:00";
   if (!els.endTime.value) els.endTime.value = "10:00";
+  if (!state.monthFilter) state.monthFilter = todayString().slice(0, 7);
+  els.monthFilter.value = state.monthFilter;
 }
 
 function bindEvents() {
@@ -69,7 +76,12 @@ function bindEvents() {
   els.rangeMode.addEventListener("click", () => setInputMode("range"));
   els.saveRecord.addEventListener("click", saveRecord);
   els.cancelEdit.addEventListener("click", cancelEdit);
-  els.exportCsv.addEventListener("click", exportCsv);
+  els.monthFilter.addEventListener("change", () => {
+    state.monthFilter = els.monthFilter.value || todayString().slice(0, 7);
+    saveState();
+    renderMonthSection();
+    renderRecords();
+  });
 
   els.hourlyRate.addEventListener("change", () => {
     const rate = positiveNumber(els.hourlyRate.value);
@@ -183,7 +195,12 @@ function editRecord(id) {
 }
 
 function deleteRecord(id) {
-  state.records = state.records.filter((record) => record.id !== id);
+  const record = state.records.find((item) => item.id === id);
+  if (!record) return;
+  const message = `確定要刪除 ${record.date}、${record.minutes} 分鐘、$${money.format(calculatePay(record))} 的紀錄嗎？`;
+  if (!confirm(message)) return;
+
+  state.records = state.records.filter((item) => item.id !== id);
   if (state.editingId === id) clearForm();
   saveState();
   render();
@@ -209,9 +226,11 @@ function clearForm() {
 
 function render() {
   els.hourlyRate.value = state.hourlyRate || els.hourlyRate.value;
+  els.monthFilter.value = state.monthFilter;
   renderInputMode();
   renderEditMode();
   renderSummaries();
+  renderMonthSection();
   renderRecords();
 }
 
@@ -233,13 +252,43 @@ function renderEditMode() {
 function renderSummaries() {
   const today = todayString();
   const month = today.slice(0, 7);
-  const todaySummary = summarize((record) => record.date === today);
-  const monthSummary = summarize((record) => record.date.slice(0, 7) === month);
-  const totalSummary = summarize(() => true);
+  setSummary(els.todayPay, els.todayMinutes, summarize(state.records.filter((record) => record.date === today)));
+  setSummary(els.monthPay, els.monthMinutes, summarize(state.records.filter((record) => record.date.slice(0, 7) === month)));
+  setSummary(els.totalPay, els.totalMinutes, summarize(state.records));
+}
 
-  setSummary(els.todayPay, els.todayMinutes, todaySummary);
-  setSummary(els.monthPay, els.monthMinutes, monthSummary);
-  setSummary(els.totalPay, els.totalMinutes, totalSummary);
+function renderMonthSection() {
+  const records = recordsForSelectedMonth();
+  const summary = summarize(records);
+  els.filterMonthPay.textContent = `$${money.format(summary.pay)}`;
+  els.filterMonthMinutes.textContent = `${summary.minutes} 分鐘`;
+  renderChart(records);
+}
+
+function renderChart(records) {
+  els.chart.innerHTML = "";
+  const byDay = new Map();
+  records.forEach((record) => {
+    const day = Number(record.date.slice(8, 10));
+    byDay.set(day, (byDay.get(day) || 0) + calculatePay(record));
+  });
+
+  if (!records.length) {
+    els.chart.innerHTML = `<p class="chart-empty">這個月份還沒有紀錄。</p>`;
+    return;
+  }
+
+  const maxPay = Math.max(...byDay.values(), 1);
+  [...byDay.entries()].sort((a, b) => a[0] - b[0]).forEach(([day, pay]) => {
+    const row = document.createElement("div");
+    row.className = "chart-row";
+    row.innerHTML = `
+      <span>${day}日</span>
+      <div class="chart-track"><div class="chart-bar" style="width:${Math.max(6, pay / maxPay * 100)}%"></div></div>
+      <strong>$${money.format(pay)}</strong>
+    `;
+    els.chart.appendChild(row);
+  });
 }
 
 function setSummary(payEl, minutesEl, summary) {
@@ -247,9 +296,8 @@ function setSummary(payEl, minutesEl, summary) {
   minutesEl.textContent = `${summary.minutes} 分鐘`;
 }
 
-function summarize(filter) {
-  return state.records.reduce((acc, record) => {
-    if (!filter(record)) return acc;
+function summarize(records) {
+  return records.reduce((acc, record) => {
     acc.minutes += Number(record.minutes) || 0;
     acc.pay += calculatePay(record);
     return acc;
@@ -257,13 +305,15 @@ function summarize(filter) {
 }
 
 function renderRecords() {
+  const records = recordsForSelectedMonth();
+  els.filterHint.textContent = `${state.monthFilter} 共 ${records.length} 筆`;
   els.recordsList.innerHTML = "";
-  if (!state.records.length) {
-    els.recordsList.innerHTML = `<p class="record-meta">目前沒有紀錄。</p>`;
+  if (!records.length) {
+    els.recordsList.innerHTML = `<p class="record-meta">這個月份沒有紀錄。</p>`;
     return;
   }
 
-  state.records.forEach((record) => {
+  records.forEach((record) => {
     const node = els.recordTemplate.content.firstElementChild.cloneNode(true);
     node.querySelector(".record-pay").textContent = `$${money.format(calculatePay(record))}`;
     node.querySelector(".record-meta").textContent =
@@ -275,25 +325,8 @@ function renderRecords() {
   });
 }
 
-function exportCsv() {
-  const header = ["date", "minutes", "time_range", "hourly_rate", "multiplier", "pay", "note"];
-  const rows = state.records.map((record) => [
-    record.date,
-    record.minutes,
-    record.timeRange || "",
-    money.format(record.hourlyRate),
-    money.format(record.multiplier),
-    money.format(calculatePay(record)),
-    record.note || "",
-  ]);
-  const csv = [header, ...rows].map((row) => row.map(csvCell).join(",")).join("\n");
-  const blob = new Blob(["\uFEFF", csv], { type: "text/csv;charset=utf-8" });
-  const url = URL.createObjectURL(blob);
-  const link = document.createElement("a");
-  link.href = url;
-  link.download = "workpay-records.csv";
-  link.click();
-  URL.revokeObjectURL(url);
+function recordsForSelectedMonth() {
+  return state.records.filter((record) => record.date.slice(0, 7) === state.monthFilter);
 }
 
 function loadState() {
@@ -301,9 +334,11 @@ function loadState() {
     const saved = JSON.parse(localStorage.getItem(STORAGE_KEY) || "{}");
     state.hourlyRate = saved.hourlyRate || "";
     state.records = Array.isArray(saved.records) ? saved.records : [];
+    state.monthFilter = saved.monthFilter || "";
   } catch {
     state.hourlyRate = "";
     state.records = [];
+    state.monthFilter = "";
   }
 }
 
@@ -311,6 +346,7 @@ function saveState() {
   localStorage.setItem(STORAGE_KEY, JSON.stringify({
     hourlyRate: state.hourlyRate,
     records: state.records,
+    monthFilter: state.monthFilter,
   }));
 }
 
@@ -338,10 +374,6 @@ function todayString() {
   const date = new Date();
   const offset = date.getTimezoneOffset() * 60000;
   return new Date(date.getTime() - offset).toISOString().slice(0, 10);
-}
-
-function csvCell(value) {
-  return `"${String(value ?? "").replaceAll('"', '""')}"`;
 }
 
 function showError(message) {

@@ -86,8 +86,20 @@
 
     <section class="panel">
       <div class="section-row">
+        <h2>月份統計</h2>
+        <input id="monthFilter" class="month-input" type="month">
+      </div>
+      <div class="chart-summary">
+        <strong id="filterMonthPay">$0.00</strong>
+        <span id="filterMonthMinutes">0 分鐘</span>
+      </div>
+      <div id="chart" class="chart" aria-label="月份每日薪水圖表"></div>
+    </section>
+
+    <section class="panel">
+      <div class="section-row">
         <h2>工作紀錄</h2>
-        <button id="exportCsv" class="ghost">匯出 CSV</button>
+        <span id="filterHint" class="hint"></span>
       </div>
       <div id="recordsList" class="records-list"></div>
     </section>
