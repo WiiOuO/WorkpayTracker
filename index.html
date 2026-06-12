@@ -15,14 +15,14 @@
         <p class="eyebrow">WorkPay Tracker</p>
         <h1>工時計薪</h1>
       </div>
-      <button id="installButton" class="icon-button" hidden title="加入主畫面">＋</button>
+      <button id="installButton" class="icon-button" hidden title="安裝到手機" type="button">＋</button>
     </header>
 
     <section class="panel rate-panel">
       <label for="hourlyRate">基礎時薪</label>
       <div class="input-row">
         <input id="hourlyRate" inputmode="decimal" type="number" min="0" step="0.01" placeholder="例如 190.5">
-        <button id="saveRate">儲存</button>
+        <button id="saveRate" type="button">儲存</button>
       </div>
     </section>
 
@@ -46,62 +46,20 @@
 
     <section class="panel">
       <div class="section-row">
-        <h2 id="formTitle">新增紀錄</h2>
-        <button id="cancelEdit" class="ghost" hidden>取消編輯</button>
-      </div>
-
-      <label for="workDate">日期</label>
-      <input id="workDate" type="date">
-
-      <div class="segmented" role="radiogroup" aria-label="工時輸入方式">
-        <button id="minutesMode" class="active" type="button">輸入分鐘</button>
-        <button id="rangeMode" type="button">起訖時間</button>
-      </div>
-
-      <div id="minutesFields">
-        <label for="minutesInput">工作分鐘</label>
-        <input id="minutesInput" inputmode="numeric" type="number" min="1" step="1" placeholder="例如 142">
-      </div>
-
-      <div id="rangeFields" class="time-grid" hidden>
-        <div>
-          <label for="startTime">開始</label>
-          <input id="startTime" type="time" value="09:00">
-        </div>
-        <div>
-          <label for="endTime">結束</label>
-          <input id="endTime" type="time" value="10:00">
-        </div>
-        <label class="check-row">
-          <input id="nextDayEnd" type="checkbox">
-          <span>結束時間是隔日</span>
-        </label>
-      </div>
-
-      <label for="multiplier">倍率</label>
-      <input id="multiplier" inputmode="decimal" type="number" min="0" step="0.01" value="1" placeholder="1、1.5、2">
-
-      <label for="note">備註</label>
-      <input id="note" type="text" placeholder="例如 假日班、餐廳早班">
-
-      <button id="saveRecord" class="primary">新增紀錄</button>
-      <p id="formError" class="error" role="alert"></p>
-    </section>
-
-    <section class="panel">
-      <div class="section-row">
         <h2>月份統計</h2>
         <input id="monthFilter" class="month-input" type="month">
       </div>
+      <label for="tagFilter">標籤篩選</label>
+      <select id="tagFilter" class="select-input"></select>
       <div class="chart-summary">
         <strong id="filterMonthPay">$0.00</strong>
         <span id="filterMonthMinutes">0 分鐘</span>
       </div>
-      <div id="calendarChart" class="calendar-chart" aria-label="月份薪水月曆"></div>
-      <div id="chart" class="chart" aria-label="月份每日薪水圖表"></div>
+      <div id="calendarChart" class="calendar-chart" aria-label="月份薪資月曆"></div>
+      <button id="clearDayFilter" class="ghost clear-filter" type="button" hidden>顯示整月</button>
     </section>
 
-    <section class="panel">
+    <section class="panel records-panel">
       <div class="section-row">
         <h2>工作紀錄</h2>
         <span id="filterHint" class="hint"></span>
@@ -110,16 +68,96 @@
     </section>
   </main>
 
+  <button id="openFormButton" class="fab" type="button" aria-label="新增紀錄">＋</button>
+
+  <div id="sheetOverlay" class="sheet-overlay" hidden></div>
+  <section id="recordSheet" class="bottom-sheet" aria-labelledby="formTitle" aria-modal="true" role="dialog" hidden>
+    <div class="sheet-handle" aria-hidden="true"></div>
+    <div class="section-row">
+      <h2 id="formTitle">新增紀錄</h2>
+      <button id="cancelEdit" class="ghost" type="button">關閉</button>
+    </div>
+
+    <label for="workDate">日期</label>
+    <input id="workDate" type="date">
+
+    <div class="segmented mode-tabs" role="radiogroup" aria-label="紀錄輸入模式">
+      <button id="minutesMode" class="active" type="button">輸入分鐘</button>
+      <button id="rangeMode" type="button">起訖時間</button>
+      <button id="directMode" type="button">直接薪水</button>
+    </div>
+
+    <div id="minutesFields">
+      <label for="minutesInput">工作分鐘</label>
+      <input id="minutesInput" inputmode="numeric" type="number" min="1" step="1" placeholder="例如 142">
+    </div>
+
+    <div id="rangeFields" class="time-grid" hidden>
+      <div>
+        <label for="startTime">開始</label>
+        <input id="startTime" type="time" value="09:00">
+      </div>
+      <div>
+        <label for="endTime">結束</label>
+        <input id="endTime" type="time" value="10:00">
+      </div>
+      <label class="check-row">
+        <input id="nextDayEnd" type="checkbox">
+        <span>結束時間在隔日</span>
+      </label>
+    </div>
+
+    <div id="timePayFields">
+      <label for="multiplier">倍率</label>
+      <input id="multiplier" inputmode="decimal" type="number" min="0" step="0.01" value="1" placeholder="1、1.5、2">
+    </div>
+
+    <div id="directPayFields" hidden>
+      <label for="directPay">直接薪水</label>
+      <input id="directPay" inputmode="decimal" type="number" min="0" step="0.01" placeholder="例如 100">
+    </div>
+
+    <label for="recordTag">標籤</label>
+    <select id="recordTag" class="select-input"></select>
+    <div class="tag-tools">
+      <input id="tagNameInput" type="text" placeholder="新增或改名標籤，例如 麥當勞">
+      <div class="tag-actions">
+        <button id="addTagButton" type="button">新增</button>
+        <button id="renameTagButton" class="ghost" type="button">改名</button>
+        <button id="deleteTagButton" class="danger" type="button">刪除</button>
+      </div>
+    </div>
+
+    <label for="note">備註</label>
+    <input id="note" type="text" placeholder="例如 假日班、餐廳早班">
+
+    <button id="saveRecord" class="primary" type="button">新增紀錄</button>
+    <p id="formError" class="error" role="alert"></p>
+  </section>
+
+  <template id="dayGroupTemplate">
+    <section class="day-group">
+      <button class="day-group-header" type="button">
+        <span class="day-title"></span>
+        <span class="day-total"></span>
+      </button>
+      <div class="day-records"></div>
+    </section>
+  </template>
+
   <template id="recordTemplate">
     <article class="record-card">
       <div>
-        <strong class="record-pay"></strong>
+        <div class="record-title-row">
+          <strong class="record-pay"></strong>
+          <span class="record-tag" hidden></span>
+        </div>
         <p class="record-meta"></p>
         <p class="record-note"></p>
       </div>
       <div class="record-actions">
-        <button class="edit-record">編輯</button>
-        <button class="delete-record danger">刪除</button>
+        <button class="edit-record" type="button">編輯</button>
+        <button class="delete-record danger" type="button">刪除</button>
       </div>
     </article>
   </template>
