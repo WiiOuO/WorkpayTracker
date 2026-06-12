@@ -195,6 +195,21 @@ button {
   gap: 10px;
 }
 
+.check-row {
+  display: flex;
+  grid-column: 1 / -1;
+  align-items: center;
+  gap: 10px;
+  min-height: 44px;
+  margin-top: 8px;
+  color: var(--ink);
+}
+
+.check-row input {
+  width: 22px;
+  min-height: 22px;
+}
+
 .error {
   min-height: 20px;
   margin: 10px 0 0;

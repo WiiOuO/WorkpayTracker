@@ -28,6 +28,7 @@ const els = {
   minutesInput: $("minutesInput"),
   startTime: $("startTime"),
   endTime: $("endTime"),
+  nextDayEnd: $("nextDayEnd"),
   multiplier: $("multiplier"),
   note: $("note"),
   saveRecord: $("saveRecord"),
@@ -132,6 +133,7 @@ function saveRecord() {
     date,
     minutes: duration.minutes,
     timeRange: duration.timeRange,
+    nextDayEnd: duration.nextDayEnd,
     hourlyRate,
     multiplier,
     note: els.note.value.trim(),
@@ -161,12 +163,15 @@ function readDuration() {
 
   const start = parseTime(els.startTime.value);
   const end = parseTime(els.endTime.value);
+  const nextDayEnd = els.nextDayEnd.checked;
   if (start == null || end == null) return { ok: false, error: "請輸入開始與結束時間" };
-  if (end <= start) return { ok: false, error: "結束時間必須晚於開始時間；第一版不處理跨日班" };
+  const adjustedEnd = nextDayEnd ? end + 24 * 60 : end;
+  if (adjustedEnd <= start) return { ok: false, error: "結束時間必須晚於開始時間；如果是跨日班，請勾選隔日" };
   return {
     ok: true,
-    minutes: end - start,
-    timeRange: `${els.startTime.value} - ${els.endTime.value}`,
+    minutes: adjustedEnd - start,
+    timeRange: `${els.startTime.value} - ${nextDayEnd ? "隔日 " : ""}${els.endTime.value}`,
+    nextDayEnd,
   };
 }
 
@@ -186,7 +191,8 @@ function editRecord(id) {
   } else {
     const [start, end] = (record.timeRange || "09:00 - 10:00").split(" - ");
     els.startTime.value = start || "09:00";
-    els.endTime.value = end || "10:00";
+    els.nextDayEnd.checked = Boolean(record.nextDayEnd) || (end || "").startsWith("隔日 ");
+    els.endTime.value = (end || "10:00").replace("隔日 ", "");
   }
 
   renderInputMode();
@@ -219,6 +225,7 @@ function clearForm() {
   els.workDate.value = todayString();
   els.startTime.value = "09:00";
   els.endTime.value = "10:00";
+  els.nextDayEnd.checked = false;
   state.inputMode = "minutes";
   renderInputMode();
   renderEditMode();
