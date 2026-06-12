@@ -382,6 +382,18 @@ function showError(message) {
 
 function registerServiceWorker() {
   if ("serviceWorker" in navigator) {
-    navigator.serviceWorker.register("sw.js").catch(() => {});
+    let refreshing = false;
+    navigator.serviceWorker.addEventListener("controllerchange", () => {
+      if (refreshing) return;
+      refreshing = true;
+      window.location.reload();
+    });
+
+    navigator.serviceWorker.register("sw.js").then((registration) => {
+      registration.update();
+      document.addEventListener("visibilitychange", () => {
+        if (!document.hidden) registration.update();
+      });
+    }).catch(() => {});
   }
 }
