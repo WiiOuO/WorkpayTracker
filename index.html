@@ -1,0 +1,112 @@
+<!doctype html>
+<html lang="zh-Hant">
+<head>
+  <meta charset="utf-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1, viewport-fit=cover">
+  <meta name="theme-color" content="#173d36">
+  <title>WorkPay Tracker</title>
+  <link rel="manifest" href="manifest.webmanifest">
+  <link rel="stylesheet" href="styles.css">
+</head>
+<body>
+  <main class="app-shell">
+    <header class="hero">
+      <div>
+        <p class="eyebrow">WorkPay Tracker</p>
+        <h1>工時計薪</h1>
+      </div>
+      <button id="installButton" class="icon-button" hidden title="加入主畫面">＋</button>
+    </header>
+
+    <section class="panel rate-panel">
+      <label for="hourlyRate">基礎時薪</label>
+      <div class="input-row">
+        <input id="hourlyRate" inputmode="decimal" type="number" min="0" step="0.01" placeholder="例如 190.5">
+        <button id="saveRate">儲存</button>
+      </div>
+    </section>
+
+    <section class="summary-grid" aria-label="薪資摘要">
+      <article>
+        <span>今日</span>
+        <strong id="todayPay">$0.00</strong>
+        <small id="todayMinutes">0 分鐘</small>
+      </article>
+      <article>
+        <span>本月</span>
+        <strong id="monthPay">$0.00</strong>
+        <small id="monthMinutes">0 分鐘</small>
+      </article>
+      <article>
+        <span>全部</span>
+        <strong id="totalPay">$0.00</strong>
+        <small id="totalMinutes">0 分鐘</small>
+      </article>
+    </section>
+
+    <section class="panel">
+      <div class="section-row">
+        <h2 id="formTitle">新增紀錄</h2>
+        <button id="cancelEdit" class="ghost" hidden>取消編輯</button>
+      </div>
+
+      <label for="workDate">日期</label>
+      <input id="workDate" type="date">
+
+      <div class="segmented" role="radiogroup" aria-label="工時輸入方式">
+        <button id="minutesMode" class="active" type="button">輸入分鐘</button>
+        <button id="rangeMode" type="button">起訖時間</button>
+      </div>
+
+      <div id="minutesFields">
+        <label for="minutesInput">工作分鐘</label>
+        <input id="minutesInput" inputmode="numeric" type="number" min="1" step="1" placeholder="例如 142">
+      </div>
+
+      <div id="rangeFields" class="time-grid" hidden>
+        <div>
+          <label for="startTime">開始</label>
+          <input id="startTime" type="time" value="09:00">
+        </div>
+        <div>
+          <label for="endTime">結束</label>
+          <input id="endTime" type="time" value="10:00">
+        </div>
+      </div>
+
+      <label for="multiplier">倍率</label>
+      <input id="multiplier" inputmode="decimal" type="number" min="0" step="0.01" value="1" placeholder="1、1.5、2">
+
+      <label for="note">備註</label>
+      <input id="note" type="text" placeholder="例如 假日班、餐廳早班">
+
+      <button id="saveRecord" class="primary">新增紀錄</button>
+      <p id="formError" class="error" role="alert"></p>
+    </section>
+
+    <section class="panel">
+      <div class="section-row">
+        <h2>工作紀錄</h2>
+        <button id="exportCsv" class="ghost">匯出 CSV</button>
+      </div>
+      <div id="recordsList" class="records-list"></div>
+    </section>
+  </main>
+
+  <template id="recordTemplate">
+    <article class="record-card">
+      <div>
+        <strong class="record-pay"></strong>
+        <p class="record-meta"></p>
+        <p class="record-note"></p>
+      </div>
+      <div class="record-actions">
+        <button class="edit-record">編輯</button>
+        <button class="delete-record danger">刪除</button>
+      </div>
+    </article>
+  </template>
+
+  <script src="app.js"></script>
+</body>
+</html>
