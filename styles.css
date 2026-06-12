@@ -30,7 +30,7 @@ button, input {
 .app-shell {
   width: min(760px, 100%);
   margin: 0 auto;
-  padding: 20px 16px 36px;
+  padding: 18px 14px 36px;
 }
 
 .hero {
@@ -379,8 +379,43 @@ button {
 }
 
 @media (max-width: 560px) {
+  .app-shell {
+    padding: 14px 10px 28px;
+  }
+
+  .hero {
+    min-height: 70px;
+  }
+
+  h1 {
+    font-size: 32px;
+  }
+
+  h2 {
+    font-size: 19px;
+  }
+
+  .panel {
+    padding: 12px;
+    border-radius: 7px;
+  }
+
   .summary-grid {
-    grid-template-columns: 1fr;
+    grid-template-columns: repeat(3, minmax(0, 1fr));
+    gap: 6px;
+  }
+
+  .summary-grid article {
+    padding: 10px 8px;
+  }
+
+  .summary-grid span,
+  .summary-grid small {
+    font-size: 11px;
+  }
+
+  .summary-grid strong {
+    font-size: clamp(14px, 4.4vw, 18px);
   }
 
   .record-card {
@@ -392,12 +427,14 @@ button {
   }
 
   .section-row {
-    align-items: stretch;
-    flex-direction: column;
+    align-items: center;
+    flex-direction: row;
+    flex-wrap: wrap;
   }
 
   .month-input {
-    width: 100%;
+    width: 150px;
+    min-width: 0;
   }
 
   .chart-row {
@@ -410,12 +447,40 @@ button {
   }
 
   .calendar-chart {
-    gap: 4px;
+    gap: 3px;
   }
 
   .calendar-day {
-    min-height: 64px;
-    border-radius: 6px;
-    padding: 6px 4px;
+    min-height: 54px;
+    border-radius: 5px;
+    padding: 5px 3px;
+  }
+
+  .calendar-weekday,
+  .calendar-day span,
+  .calendar-day small {
+    font-size: 10px;
+  }
+
+  .calendar-day strong {
+    margin-top: 2px;
+    font-size: clamp(9px, 2.7vw, 12px);
+  }
+
+  .chart-summary strong {
+    font-size: 24px;
+  }
+
+  .record-card {
+    padding: 12px;
+  }
+
+  .record-pay {
+    font-size: 18px;
+  }
+
+  .record-meta,
+  .record-note {
+    font-size: 13px;
   }
 }
